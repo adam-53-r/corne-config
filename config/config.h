@@ -1,14 +1,49 @@
 #pragma once
 
-#define TAPPING_TERM 250
-#define QUICK_TAP_TERM 0
-#define FLOW_TAP_TERM 150
+// =============================================================================
+//  Corne Choc Pro (mini, OLED) — merged config.h
+//  twin's tap-hold / combo tuning  +  Keebart OLED hardware config
+// =============================================================================
 
-#define COMBO_TERM 55
+// --- twin's tap-hold + combo tuning -----------------------------------------
+#define TAPPING_TERM 250        // hold threshold for mod-tap / layer-tap (ms)
+#define QUICK_TAP_TERM 0        // disable auto-repeat on quick tap-then-hold
+#ifndef FLOW_TAP_TERM
+#define FLOW_TAP_TERM 150   // suppress hold during fast typing flow (HRM aid)
+#endif
+
+#define COMBO_TERM 55           // default combo window (per-combo overridden in keymap.c)
+#ifndef COMBO_TERM_PER_COMBO
 #define COMBO_TERM_PER_COMBO
+#endif
 #define COMBO_MUST_TAP_PER_COMBO
 
-#define PERMISSIVE_HOLD
-#define CHORDAL_HOLD
+#define PERMISSIVE_HOLD         // resolve hold on nested press (helps HRM)
+#ifndef CHORDAL_HOLD
+#define CHORDAL_HOLD        // opposite-hand rule for tap-hold (see chordal_hold_layout)
+#endif
 
 #define UNICODE_SELECTED_MODES UNICODE_MODE_LINUX, UNICODE_MODE_WINDOWS
+
+// --- Keebart OLED hardware (required for the screens) ------------------------
+#define VIAL_KEYBOARD_UID {0x89, 0x36, 0x2A, 0xC7, 0xFA, 0xD8, 0x89, 0x45}
+#define VIAL_UNLOCK_COMBO_ROWS {0, 0}
+#define VIAL_UNLOCK_COMBO_COLS {1, 2}
+
+#define OLED_IC OLED_IC_SSD1312
+#define OLED_DISPLAY_128X64
+#define OLED_FLIP_SEGMENT
+#define OLED_DISPLAY_ADDRESS 0x3C
+#define OLED_CHARGE_PUMP_VALUE 0x72
+#define OLED_BRIGHTNESS 64
+#define OLED_UPDATE_INTERVAL 50
+#define OLED_TIMEOUT 0
+#define OLED_TIMEOUT_USER 60000
+#define OLED_FADE_OUT
+
+#define SELECT_SOFT_SERIAL_SPEED 2
+#define SPLIT_TRANSPORT_MIRROR
+#define SPLIT_WPM_ENABLE
+#define SPLIT_WATCHDOG_TIMEOUT 4000
+
+#define SPLIT_TRANSACTION_IDS_USER USER_SYNC_OLED_STATE, USER_SYNC_LASTKEY, USER_SYNC_PRESSES

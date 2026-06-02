@@ -8,3 +8,11 @@ devenv.local.yaml
 
 # pre-commit
 .pre-commit-config.yaml
+
+# the symlink created into the qmk submodule's keymaps tree
+/qmk/keyboards/keebart/corne_choc_pro/keymaps/adam
+
+# qmk build artifacts (if any leak outside the submodule)
+*.uf2
+*.bin
+*.hex
