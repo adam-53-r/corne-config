@@ -38,7 +38,8 @@ enum layers {
     _NUM,     // numbers + F-keys
     _LANG,    // Catalan/Spanish accents (Unicode)
     _SYS,     // system: media, brightness, bootloader, layout toggles
-    _QWERTY   // QWERTY rescue layer
+    _QWERTY,  // QWERTY rescue layer
+    _WM       // Hyprland window management (Super auto-held on entry thumb)
 };
 
 // -----------------------------------------------------------------------------
@@ -52,6 +53,13 @@ enum layers {
 #define SYS     MO(_SYS)
 #define VIBRA   PDF(_BASE)
 #define QWERTY  PDF(_QWERTY)
+
+// Window-management layer entry. WM_ENT is placed in _NAV; while _NAV (left
+// thumb) AND WM_ENT (right thumb) are both held, _WM is active. The entry key
+// itself holds Super (LGUI), so every _WM key is implicitly Super+<key> — which
+// is exactly what the Hyprland binds expect. Tier modifiers (Shift/Ctrl/Alt)
+// for the directional families come from the LEFT home-row mods (cross-hand).
+#define WM_ENT  LM(_WM, MOD_LGUI)     // momentary _WM + hold Left GUI together
 
 #define TH_CAPS LT(_SYS,  KC_CAPS)    // left thumb 1: tap Caps / hold System
 #define TH_R    LT(_LANG, KC_R)       // left thumb 2: tap R    / hold Language
@@ -265,12 +273,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                           TH_CAPS, TH_R,    NAV,         SYM,         KC_SPC,      KC_BSPC
     ),
 
-    /* _NAV */
+    /* _NAV — hold left thumb. Right thumb 1 (WM_ENT) steps up into _WM. */
     [_NAV] = LAYOUT_split_3x5_3(
         UNDO,    CUT,     COPY,    PASTE,   SAVE,        KC_PGUP, KC_HOME, KC_UP,   KC_END,  KC_DEL,
         KC_LALT, KC_LCTL, KC_LGUI, KC_LSFT, KC_TAB,      KC_PGDN, KC_LEFT, KC_DOWN, KC_RGHT, KC_BSPC,
         FIND,    S_TAB,   PREVT,   NEXTT,   ALT_TAB,     KC_INS,  WORD_L,  WORD_R,  C_BSPC,  C_DEL,
-                          _______, _______, _______,     NUM,     KC_ESC,  KC_ENT
+                          _______, _______, _______,     WM_ENT,  KC_ESC,  KC_ENT
     ),
 
     /* _SYM */
@@ -314,6 +322,50 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_A,    KC_S,    KC_D,    KC_F,    KC_G,        KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN,
         KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,        KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,
                           TH_CAPS, KC_SPC,  NAV,         SYM,     KC_SPC,  KC_BSPC
+    ),
+
+    /* -------------------------------------------------------------------------
+     * _WM — Hyprland window management.   (OLED shows "WM")
+     *
+     * ENTRY: hold left-thumb (Nav) -> hold right-thumb-1 (WM_ENT).
+     * WM_ENT = LM(_WM, MOD_LGUI): Left GUI (Super) is held the entire time, so
+     * every key here is implicitly Super+<key>, matching hyprland.conf.
+     *
+     * ── DIRECTIONS (right home row, mirrors _NAV arrows) ──────────────────
+     * Tap an arrow; hold a LEFT-hand tier mod to pick the family:
+     *     (none)      Super        + dir  -> movefocus
+     *     Shift       Super+Shift  + dir  -> swapwindow
+     *     Ctrl        Super+Ctrl   + dir  -> movewindoworgroup
+     *     Alt         Super+Alt    + dir  -> focusmonitor
+     *     Alt+Shift   Super+Alt+Sft+ dir  -> movecurrentworkspacetomonitor
+     * Left tier mods are plain modifier keys on the left home row (hold with the
+     * left hand, tap arrow with the right — comfortable cross-hand chord).
+     *
+     * ── WORKSPACES (right top + bottom rows) ──────────────────────────────
+     * Tap a digit: Super+digit -> switch to workspace.
+     * Hold Shift (left) + digit: Super+Shift+digit -> move window there (silent).
+     *
+     * ── NAMED ACTIONS (left hand) ─────────────────────────────────────────
+     * Super is held, so these are Super+<key>. Two need Shift baked in because
+     * the bind is Super+SHIFT+key (kill, fullscreen-0); those send S(...).
+     *
+     * GRID (Super always held):
+     *   Kill*  Full   Float  Group  LockG     WS7   WS8    WS9    WS0   Special
+     *   Shift  Ctrl   Alt    LockS  Pseudo    Home  ←      ↓→↑    →     End
+     *   Term   Editor Brow   Menu   Swallow   WS1   WS2    WS3    WS4   Clip
+     *            [Nav]  [pass] [WM]    |    [Spec] [Esc] [Enter]
+     *
+     *  *Kill = S(KC_Q) because killactive is Super+Shift+q.
+     *  Full(top-left row, KC_F) = Super+f = fullscreen,1.
+     *  Arrows occupy the right home row exactly where _NAV puts them.
+     *  Digits: top row right = 7 8 9 0, bottom row right = 1 2 3 4 (5/6 on thumbs
+     *  area would clutter; if you want 5/6 tell me — most setups use 1-4 heavily).
+     * ---------------------------------------------------------------------- */
+    [_WM] = LAYOUT_split_3x5_3(
+        S(KC_Q), KC_F,    KC_W,    KC_G,    KC_T,        KC_7,    KC_8,    KC_9,    KC_0,    KC_U,
+        KC_LSFT, KC_LCTL, KC_LALT, KC_S,    KC_I,        KC_HOME, KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT,
+        KC_ENT,  KC_E,    KC_B,    KC_X,    KC_Y,        KC_1,    KC_2,    KC_3,    KC_4,    KC_C,
+                          _______, _______, _______,     KC_U,    KC_ESC,  KC_ENT
     )
 };
 
@@ -345,19 +397,24 @@ static void activity_pulse_tick(void) {
     } else if (t < 1200) {
         v = 200 - (uint8_t)(200 * (t - 140) / 1060);
     } else {
-        rgb_matrix_disable_noeeprom();
+        // Pulse finished: restore the persistent baseline effect/color from
+        // EEPROM instead of switching the LEDs off, so they stay on.
         activity_pulse_active = false;
+        rgb_matrix_reload_from_eeprom();
         return;
     }
     rgb_matrix_sethsv_noeeprom(activity_pulse_hue, activity_pulse_sat, v);
 }
 
 void suspend_power_down_user(void) {
-    rgb_matrix_disable_noeeprom();
+    rgb_matrix_disable_noeeprom();   // dark while the machine sleeps
     activity_pulse_active = false;
 }
 
 void suspend_wakeup_init_user(void) {
+    // Reload the saved baseline first so we wake to the steady effect, then
+    // play the brief white wake pulse on top of it.
+    rgb_matrix_reload_from_eeprom();
     start_activity_pulse(0, 0); // white wake pulse
 }
 
@@ -369,6 +426,17 @@ bool shutdown_user(bool jump_to_bootloader) {
         rgb_matrix_update_pwm_buffers();
     }
     return true;
+}
+
+// Persistent RGB baseline. Runs only when EEPROM is reset (first flash after a
+// clear, or via EE_CLR). Writes an always-on default effect to EEPROM so the
+// LEDs have a steady state to return to after each pulse. Change the mode/HSV
+// here to set your preferred default, or just use CM_TOGG / the SYS-layer RGB
+// controls at runtime — those persist too.
+void eeconfig_init_user(void) {
+    rgb_matrix_enable();                       // on, saved to EEPROM
+    rgb_matrix_mode(RGB_MATRIX_CYCLE_LEFT_RIGHT); // a calm default animation
+    rgb_matrix_sethsv(170, 200, 180);          // bluish, ~70% brightness
 }
 #endif // RGB_MATRIX_ENABLE
 
@@ -460,6 +528,7 @@ void print_current_layer(uint8_t row) {
         case _LANG:   strcpy(layer_str, "Lang");  break;
         case _SYS:    strcpy(layer_str, "Sys");   break;
         case _QWERTY: strcpy(layer_str, "Qwrt");  break;
+        case _WM:     strcpy(layer_str, "WM");    break;
         default:
             snprintf(layer_str, sizeof(layer_str), "%d", get_highest_layer(layer_state));
     }
@@ -645,6 +714,12 @@ void keyboard_post_init_user(void) {
 #endif
 
 #ifdef RGB_MATRIX_ENABLE
+    // Guarantee the LEDs are on at boot even if a previous EEPROM state had
+    // them disabled. If RGB was somehow off in EEPROM, enable it (persisted)
+    // so the baseline is always present; then play the blue startup pulse.
+    if (!rgb_matrix_is_enabled()) {
+        rgb_matrix_enable();
+    }
     start_activity_pulse(170, 200); // twin: blue startup pulse
 #endif
 }
